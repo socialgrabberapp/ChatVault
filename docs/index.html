@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Export a ChatGPT conversation to Markdown — ChatVault</title>
+<meta name="description" content="A free browser extension that saves the ChatGPT conversation you are reading to one Markdown file, then counts messages, characters and rich content against the page and names what is missing. No account, no server, runs locally.">
+<link rel="canonical" href="https://socialgrabberapp.github.io/ChatVault/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ChatVault">
+<meta property="og:title" content="ChatVault — back up the ChatGPT chat you are reading, and see what it left out">
+<meta property="og:description" content="One Markdown file per conversation, plus a report that compares the file with the page: message counts, characters, code blocks, tables, images, links, formulas and diagrams. Gaps are named, not hidden.">
+<meta property="og:url" content="https://socialgrabberapp.github.io/ChatVault/">
+<meta property="og:image" content="https://socialgrabberapp.github.io/ChatVault/assets/hero-1280x800-en.png">
+<link rel="icon" type="image/png" sizes="128x128" href="assets/icon-128.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "ChatVault",
+  "applicationCategory": "BrowserApplication",
+  "operatingSystem": "Chrome",
+  "description": "Browser extension that saves the ChatGPT conversation on screen to one Markdown file and compares the file with the page — message counts, characters and rich content — naming anything that is missing instead of hiding it. Everything runs locally, with no server.",
+  "url": "https://socialgrabberapp.github.io/ChatVault/",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I export a ChatGPT conversation to Markdown?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open the conversation in your browser, then click the vertical tab on the right edge of the page or press Alt+B. The panel scans the messages the page has loaded, shows its report, and hands you one Markdown file. No links to copy, no separate website, and the extension never calls an internal API."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do other export tools save only part of a long conversation?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "ChatGPT renders a conversation as a virtualized list: only a handful of messages exist in the page at any moment. A one-shot scrape therefore saves what happens to be on screen. ChatVault scrolls through the conversation, collects the union of every message it sees by message id, and keeps going until two full passes add nothing new."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work with a free account?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. It works with any conversation you can open in the browser. The extension does not read account details, does not ask for a password and does not use an API key."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does the report actually check?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Three layers. Messages: how many the page showed and how many were written. Content: the character count of each message, page versus file. Rich content: code blocks, tables, images, links, formulas and diagrams on both sides. When a number disagrees the file is still delivered, and the difference is named — which message, who said it, and both character counts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I export only some of the messages?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open Choose which messages to export at the bottom of the panel and untick what you do not need. The status line switches to a partial export and the file name carries the selection. A partial export is deliberately not recorded in the local library, so it can never become the baseline for the next comparison."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where are my files and my data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The .md and .zip land in your normal Downloads folder. The built-in library keeps only metadata — time, message counts, file name and the message id list of that version — in your browser's local storage on your own machine. Nothing is uploaded: there is no server and no analytics. The only permission requested is local storage, and the extension runs on chatgpt.com and chat.openai.com and no other site."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes: no account, no daily quota, no ads, no analytics and no paid tier. PDF is produced by your own browser's print dialog, so it does not depend on a second service."
+      }
+    }
+  ]
+}
+</script>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9; --card: #ffffff; --text: #24292f; --muted: #656d76;
+    --line: #e3e6ea; --accent: #10a37f; --accent-dark: #0d8a6b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #14171c; --card: #1c2027; --text: #d7dde3; --muted: #9aa4ad;
+            --line: #31363f; --accent: #35d0a5; --accent-dark: #10a37f; }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.7 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif; }
+  a { color: var(--accent); }
+  img { max-width: 100%; height: auto; display: block; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+  header { border-bottom: 1px solid var(--line); background: var(--card); }
+  .nav { display: flex; align-items: center; gap: 20px; padding: 13px 0; }
+  .brand { font-weight: 700; font-size: 17px; color: var(--text); text-decoration: none; }
+  .navlinks { margin-left: auto; display: flex; gap: 18px; flex-wrap: wrap; }
+  .navlinks a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  .navlinks a:hover { color: var(--accent); }
+  section { padding: 44px 0; }
+  h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.28; margin: 0 0 14px; }
+  h2 { font-size: 24px; margin: 0 0 10px; }
+  h3 { font-size: 16px; margin: 0 0 6px; }
+  .lead { color: var(--muted); font-size: 17px; margin: 0 0 22px; }
+  .hero { display: grid; grid-template-columns: 1.02fr 0.98fr; gap: 36px;
+          align-items: center; padding-top: 52px; }
+  .hero .sub { font-size: 17px; color: var(--muted); margin: 0; }
+  .cta { display: flex; gap: 12px; flex-wrap: wrap; margin: 22px 0 12px; }
+  .btn { display: inline-block; border-radius: 9px; padding: 13px 22px;
+         font-weight: 600; font-size: 15px; text-decoration: none; line-height: 1.2; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-ghost { border: 1px solid var(--line); background: var(--card); color: var(--text); }
+  .factrow { color: var(--muted); font-size: 14px; margin: 0; }
+  .shot img { width: 100%; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .card p { margin: 0; font-size: 14.5px; color: var(--muted); }
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px;
+             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  ol.steps li { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  ol.steps .n { display: inline-flex; width: 26px; height: 26px; border-radius: 50%;
+                background: var(--accent); color: #fff; align-items: center; justify-content: center;
+                font-weight: 700; font-size: 14px; margin-bottom: 10px; }
+  ol.steps p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  figure { margin: 0; }
+  figcaption { color: var(--muted); font-size: 13.5px; margin-top: 8px; }
+  details { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+            padding: 14px 18px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 15.5px; }
+  details p { margin: 10px 0 2px; color: var(--muted); font-size: 14.5px; }
+  code { font: 13px/1.5 ui-monospace, Consolas, monospace; background: var(--bg);
+         border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
+  footer { border-top: 1px solid var(--line); background: var(--card); padding: 28px 0 36px; }
+  footer .links { display: flex; gap: 18px; flex-wrap: wrap; margin: 0; }
+  footer .links a { color: var(--muted); text-decoration: none; font-size: 14px; }
+  footer .links a:hover { color: var(--accent); }
+  footer .tiny { color: var(--muted); font-size: 12.5px; line-height: 1.6; margin: 14px 0 0; }
+  @media (max-width: 820px) { .hero { grid-template-columns: 1fr; } }
+  /* click-to-enlarge (no JavaScript) */
+  figure.zoom > a.shot { display: block; cursor: zoom-in; }
+  figure.zoom > a.shot:hover img { border-color: var(--accent); }
+  figure.zoom .lb-backdrop, figure.zoom .lb-close { display: none; }
+  figure.zoom:target { position: fixed; inset: 0; z-index: 90; margin: 0; padding: 3vmin;
+    display: flex; align-items: center; justify-content: center; background: rgba(9, 11, 13, .92); }
+  figure.zoom:target .lb-backdrop { display: block; position: absolute; inset: 0; cursor: zoom-out; }
+  figure.zoom:target > a.shot { pointer-events: none; }
+  figure.zoom:target img { width: auto; height: auto; max-width: 96vw; max-height: 88vh;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, .55); }
+  figure.zoom:target figcaption { display: none; }
+  figure.zoom:target .lb-close { display: flex; align-items: center; justify-content: center;
+    position: absolute; top: 14px; right: 16px; width: 40px; height: 40px; border-radius: 50%;
+    background: rgba(255, 255, 255, .16); color: #fff; font-size: 22px; line-height: 1;
+    text-decoration: none; }
+  figure.zoom:target .lb-close:hover { background: rgba(255, 255, 255, .32); }
+</style>
+</head>
+<body id="top">
+
+<header>
+  <div class="wrap nav">
+    <a class="brand" href="#top">ChatVault</a>
+    <nav class="navlinks">
+      <a href="#report">The report</a>
+      <a href="#features">Features</a>
+      <a href="#how">How it works</a>
+      <a href="#limits">Limits</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a href="#zh" lang="zh-CN">中文</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero wrap">
+    <div>
+      <h1>Back up the ChatGPT chat you are reading — and see what the file left out</h1>
+      <p class="sub">ChatVault is a free browser extension for chatgpt.com. It scrolls the conversation you have open, collects every message the page has loaded, and writes one Markdown file. Then it counts what it wrote against what the page displayed — messages, characters, code blocks, tables, images, links, formulas, diagrams — and names anything that does not match. Nothing is uploaded, there is no account, and there is no server.</p>
+      <p class="cta">
+        <a class="btn btn-primary" href="#install">How to install</a>
+        <a class="btn btn-ghost" href="#report">See what the report looks like</a>
+      </p>
+      <p class="factrow">Free · No account · No ads or analytics · Runs 100% locally</p>
+    </div>
+    <figure class="shot zoom" id="shot-hero">
+      <a class="lb-backdrop" href="#!" aria-label="Close enlarged view" tabindex="-1"></a>
+      <a class="shot" href="#shot-hero">
+        <img src="assets/hero-1280x800-en.png" width="1280" height="800" alt="Social preview: a 19-message chat that other tools save only 8 messages of, next to the ChatVault panel with its per-message reading and download buttons">
+      </a>
+      <a class="lb-close" href="#!" aria-label="Close enlarged view">&times;</a>
+    </figure>
+  </section>
+
+  <section id="report">
+    <div class="wrap">
+      <h2>A receipt, not a promise</h2>
+      <p class="lead">Every export tool says the file is fine. This one shows you the arithmetic behind that claim, in three layers, before and after the file is written.</p>
+      <div class="grid">
+        <div class="card"><h3>Messages</h3><p>How many messages the page showed, how many were written, and how the question and answer counts line up.</p></div>
+        <div class="card"><h3>Content</h3><p>The character count of each message, page versus file. A reply that came out shorter is flagged instead of quietly shipped.</p></div>
+        <div class="card"><h3>Rich content</h3><p>Code blocks, tables, images, links, formulas and diagrams counted on both sides, so a lost table or a formula without its LaTeX source is a reading, not a guess.</p></div>
+        <div class="card"><h3>Gaps are named</h3><p>When a number disagrees, the panel says which message, who said it, and both character counts. The file still ships — you decide what to do about it.</p></div>
+      </div>
+      <figure class="zoom" id="shot-gaps" style="margin-top:26px">
+        <a class="lb-backdrop" href="#!" aria-label="Close enlarged view" tabindex="-1"></a>
+        <a class="shot" href="#shot-gaps">
+          <img src="assets/shot2-1280x800-en.png" width="1280" height="800" loading="lazy" alt="Panel with a two-gap report: short messages and a formula without its LaTeX source are listed by message number, with the download buttons still available">
+        </a>
+        <figcaption>Two gaps on one conversation: three messages came out shorter than the page, and one formula arrived without its LaTeX source. Both are listed by message number, and the file is still downloadable.</figcaption>
+        <a class="lb-close" href="#!" aria-label="Close enlarged view">&times;</a>
+      </figure>
+    </div>
+  </section>
+
+  <section id="features">
+    <div class="wrap">
+      <h2>What ends up on your disk</h2>
+      <p class="lead">The conversation is the point, so the boring parts are handled: long chats, generated images, writing blocks, diagrams.</p>
+      <div class="grid">
+        <div class="card"><h3>Long, virtualized chats</h3><p>ChatGPT keeps only a handful of messages in the page at a time. The scan scrolls through the conversation and unions every message it sees by id, stopping only when two full passes add nothing new.</p></div>
+        <div class="card"><h3>Generated images travel with it</h3><p>Images are fetched from the page itself and packed into the .zip as <code>assets/gen-1.png</code>, next to the Markdown and a printable page.</p></div>
+        <div class="card"><h3>Writing blocks keep their source</h3><p>When the page carries the block's own Markdown copy text, that text is what gets saved — headings, lists and tables keep their structure instead of being reconstructed from the screen.</p></div>
+        <div class="card"><h3>Diagrams keep their source</h3><p>Diagram source found on the page is written into a fenced block you can edit and re-render. When no source is available, the text drawn in the diagram is kept and the report says so.</p></div>
+        <div class="card"><h3>A library on your machine</h3><p>Each backup is recorded as a version of that conversation — time, message counts, and the id list used to spot what disappeared since last time. Search it, filter it, delete a record. Nothing is removed automatically.</p></div>
+        <div class="card"><h3>Five ways out</h3><p>Download .md (a .zip when the chat has images), save as PDF through your browser's print dialog, download a printable .html, copy the body to the clipboard, or take a plain-text / CSV / JSON copy.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="lead">From an open conversation to a file on your disk in three steps.</p>
+      <ol class="steps">
+        <li><span class="n">1</span><h3>Open the conversation</h3><p>A vertical tab appears on the right edge of the page. Click it, or press Alt+B. The panel opens in place and can be dragged anywhere.</p></li>
+        <li><span class="n">2</span><h3>The panel scans</h3><p>It walks the conversation, collects messages by id and stops when two passes add nothing. A running line shows the pass number and the message count so far.</p></li>
+        <li><span class="n">3</span><h3>Read the report, take the file</h3><p>The report shows the three layers. Download .md, or the .zip when the chat has generated images. If anything is off, it is listed above the buttons.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="screens">
+    <div class="wrap">
+      <h2>In action</h2>
+      <p class="lead">What the library and the downloaded folder look like. These are illustrations of the interface, not screen captures.</p>
+      <div class="grid">
+        <figure class="zoom" id="shot-1">
+          <a class="lb-backdrop" href="#!" aria-label="Close enlarged view" tabindex="-1"></a>
+          <a class="shot" href="#shot-1">
+            <img src="assets/shot4-1280x800-en.png" width="1280" height="800" loading="lazy" alt="The local library page listing conversations with their version counts, a search field and three filters">
+          </a>
+          <figcaption>The library: one card per conversation, its version count and latest time, with search and three filters.</figcaption>
+          <a class="lb-close" href="#!" aria-label="Close enlarged view">&times;</a>
+        </figure>
+        <figure class="zoom" id="shot-2">
+          <a class="lb-backdrop" href="#!" aria-label="Close enlarged view" tabindex="-1"></a>
+          <a class="shot" href="#shot-2">
+            <img src="assets/shot5-1280x800-en.png" width="1280" height="800" loading="lazy" alt="The downloaded folder and the Markdown file open, showing a diagram kept as a mermaid fence">
+          </a>
+          <figcaption>What lands in Downloads: one Markdown file, with the diagram source kept as a fenced block.</figcaption>
+          <a class="lb-close" href="#!" aria-label="Close enlarged view">&times;</a>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section id="limits">
+    <div class="wrap">
+      <h2>What it deliberately does not do</h2>
+      <p class="lead">A short list, because a tool that claims everything is the tool that loses your chat.</p>
+      <div class="grid">
+        <div class="card"><h3>It cannot invent what the page never rendered</h3><p>If a message was never loaded, or the reply was already empty when you asked, there is nothing to save. The report says which message it was instead of writing a placeholder that looks like content.</p></div>
+        <div class="card"><h3>Code-block languages may be blank</h3><p>The page does not expose the language tag on highlighted code, so fenced blocks can come out without one. The reading shows how many blocks were unlabelled.</p></div>
+        <div class="card"><h3>Formulas can lose their source</h3><p>When the page only offers the rendered formula and not its LaTeX, the file keeps the rendered text and the report counts it as a gap.</p></div>
+        <div class="card"><h3>No account-wide crawling</h3><p>It reads the conversation you are looking at. It does not page through your history, run on a schedule, sync to a cloud, or call an internal API — read-only, on the page in front of you.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>Install</h2>
+      <p class="lead">ChatVault is installed from the browser's own store — there is no separate installer to download, and no account to create.</p>
+      <div class="grid">
+        <div class="card"><h3>Chrome Web Store</h3><p>The listing is being submitted for review, so there is no store button on this page yet. Once it is live, the button here will open the Chrome Web Store listing directly.</p></div>
+        <div class="card"><h3>Microsoft Edge Add-ons</h3><p>Planned as a second listing from the same package. Edge also runs Chrome extensions, so the Chrome listing works there too once available.</p></div>
+        <div class="card"><h3>Requirements</h3><p>Chrome 111 or newer, and the conversation open on chatgpt.com. The only permission requested is local storage.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do I export a ChatGPT conversation to Markdown?</summary>
+        <p>Open the conversation in your browser, then click the vertical tab on the right edge of the page or press Alt+B. The panel scans the messages the page has loaded, shows its report, and hands you one Markdown file. No links to copy, no separate website, and the extension never calls an internal API.</p>
+      </details>
+      <details>
+        <summary>Why do other export tools save only part of a long conversation?</summary>
+        <p>ChatGPT renders a conversation as a virtualized list: only a handful of messages exist in the page at any moment. A one-shot scrape therefore saves what happens to be on screen. ChatVault scrolls through the conversation, collects the union of every message it sees by message id, and keeps going until two full passes add nothing new.</p>
+      </details>
+      <details>
+        <summary>Does it work with a free account?</summary>
+        <p>Yes. It works with any conversation you can open in the browser. The extension does not read account details, does not ask for a password and does not use an API key.</p>
+      </details>
+      <details>
+        <summary>What does the report actually check?</summary>
+        <p>Three layers. Messages: how many the page showed and how many were written. Content: the character count of each message, page versus file. Rich content: code blocks, tables, images, links, formulas and diagrams on both sides. When a number disagrees the file is still delivered, and the difference is named — which message, who said it, and both character counts.</p>
+      </details>
+      <details>
+        <summary>How do I export only some of the messages?</summary>
+        <p>Open Choose which messages to export at the bottom of the panel and untick what you do not need. The status line switches to a partial export and the file name carries the selection. A partial export is deliberately not recorded in the local library, so it can never become the baseline for the next comparison.</p>
+      </details>
+      <details>
+        <summary>Where are my files and my data?</summary>
+        <p>The .md and .zip land in your normal Downloads folder. The built-in library keeps only metadata — time, message counts, file name and the message id list of that version — in your browser's local storage on your own machine. Nothing is uploaded: there is no server and no analytics. The only permission requested is local storage, and the extension runs on chatgpt.com and chat.openai.com and no other site.</p>
+      </details>
+      <details>
+        <summary>Is it really free?</summary>
+        <p>Yes: no account, no daily quota, no ads, no analytics and no paid tier. PDF is produced by your own browser's print dialog, so it does not depend on a second service.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="zh" lang="zh-CN">
+    <div class="wrap">
+      <h2>中文说明</h2>
+      <p class="lead">ChatVault 是一个免费的浏览器扩展，只在 chatgpt.com 上运行。它会把你当前打开的对话滚一遍，按消息 id 取并集，把页面已经加载出来的每一条都收进来，写成一份 Markdown；然后把「写进文件的」和「页面上显示的」各数一遍——消息条数、每条字数、代码块、表格、图片、链接、公式、图表——对不上的地方逐条点名，而不是让文件看起来"像是成功了"。不上传、不注册、没有服务器。</p>
+      <div class="grid">
+        <div class="card"><h3>三层对账</h3><p>消息数 / 每条字数 / 富内容，导出前后各数一遍；少了哪条、是谁说的、两侧各多少字，写在面板上。</p></div>
+        <div class="card"><h3>长对话不漏</h3><p>页面同一时刻只挂少量消息；扫描边滚边收，连续两轮没有新内容才算扫完。</p></div>
+        <div class="card"><h3>生成图与写作区块</h3><p>生成图跟着 .zip 一起走（<code>assets/gen-1.png</code>）；写作区块存页面自带的 Markdown 原文，标题列表表格都不塌。</p></div>
+        <div class="card"><h3>图表保留源码</h3><p>取得到就把图的源码写进可编辑的围栏；取不到就保留图上文字，并在读数里写明这样的有几张。</p></div>
+        <div class="card"><h3>本机备份库</h3><p>每次备份记一版（时间、条数、那一版的消息 id 清单），可搜可筛可删；满了只提示你自己删，不会自动删任何记录。</p></div>
+        <div class="card"><h3>五种拿走的方式</h3><p>下载 .md / .zip、存为 PDF（走浏览器打印）、下载可双击打开的可打印页、复制到剪贴板，另有纯文本 / CSV / JSON 副本。</p></div>
+      </div>
+      <details>
+        <summary>怎么把一条 ChatGPT 对话导出成 Markdown？</summary>
+        <p>在浏览器里打开那条对话，点页面右边缘的竖排按钮，或按 Alt+B。面板自己开始扫描，扫完把对账单列在上面、把 .md 给你。不用复制链接、不用另开网站，也不会去调内部接口。</p>
+      </details>
+      <details>
+        <summary>为什么别的导出工具会漏掉长对话里的消息？</summary>
+        <p>因为 ChatGPT 的对话是虚拟化列表：同一时刻页面里只挂着少量消息，抓一次只能拿到屏幕上那几条。我们的做法是滚动取并集，连续两轮都没有新消息才算扫完。</p>
+      </details>
+      <details>
+        <summary>免费账号能用吗？</summary>
+        <p>能。只要这条对话你能在浏览器里打开。扩展不读账号信息、不要密码、不需要 API key。</p>
+      </details>
+      <details>
+        <summary>文件和数据存在哪？</summary>
+        <p>.md 和 .zip 存在你自己的下载目录。备份库只存元数据（时间、条数、文件名、那一版的消息 id 清单），存在浏览器本地存储里。不上传、没有服务器、没有统计；唯一的权限是本地存储，只在这个对话站点上运行。详见<a href="privacy-policy.html">隐私政策</a>。</p>
+      </details>
+      <p class="cta">
+        <a class="btn btn-primary" href="#install">安装方式</a>
+      </p>
+      <p class="factrow">免费 · 无需注册 · 无每日配额 · 完全本地运行</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p class="links">
+      <a href="privacy-policy.html">Privacy Policy</a>
+      <a href="privacy-policy.html" lang="zh-CN">隐私政策</a>
+      <a href="sitemap.xml">Sitemap</a>
+      <a href="https://github.com/socialgrabberapp/ChatVault/issues">Support</a>
+      <a href="mailto:socialgrabber.app@gmail.com">socialgrabber.app@gmail.com</a>
+    </p>
+    <p class="tiny">ChatVault is not affiliated with OpenAI. ChatGPT and OpenAI are trademarks of OpenAI; all product names belong to their respective owners. The extension only reads the conversation already rendered in your own browser tab and saves it to your own computer — it does not bypass any account limit or access any API. Back up only the conversations you are entitled to keep, and comply with the service terms and your local laws.</p>
+    <p class="tiny">© 2026 ChatVault</p>
+  </div>
+</footer>
+
+</body>
+</html>

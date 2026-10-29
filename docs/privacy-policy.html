@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChatVault · Privacy Policy 隐私政策</title>
+<link rel="canonical" href="https://socialgrabberapp.github.io/ChatVault/privacy-policy.html">
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; padding: 40px 20px 80px; background: #f6f7f9; color: #24292f;
+         font: 15px/1.8 system-ui, "Segoe UI", "Microsoft YaHei", sans-serif; }
+  main { max-width: 780px; margin: 0 auto; background: #fff; border-radius: 12px;
+         padding: 36px 40px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 34px 0 8px; padding-top: 18px; border-top: 1px solid #eaecef; }
+  .meta { color: #656d76; font-size: 13px; margin-bottom: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 14px; }
+  th, td { border: 1px solid #e3e6ea; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #f2f4f7; }
+  code { background: #f0f2f5; border-radius: 4px; padding: 1px 6px; font-size: 13px; }
+  a { color: #0a7f4b; }
+  .lang-switch { text-align: right; font-size: 13px; margin-bottom: 8px; }
+  .divider { margin: 44px 0 0; padding-top: 28px; border-top: 2px solid #243144; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #14171c; color: #d7dde3; }
+    main { background: #1c2027; box-shadow: none; }
+    th { background: #232833; }
+    th, td { border-color: #31363f; }
+    code { background: #262c36; }
+    .divider { border-top-color: #46536b; }
+  }
+</style>
+</head>
+<body>
+<main>
+
+<div class="lang-switch"><a href="#en">English</a></div>
+<h1>ChatVault 隐私政策</h1>
+<p class="meta">生效日期 / Effective Date: 2026-10-29</p>
+
+<p>本扩展（"本扩展"）由 <strong>Wade</strong>（"我们"）开发，并在 Chrome 网上应用店以开发者账号发布——条目底部「Offered by」一栏显示的就是这个开发者名。它在商店里按语言以不同标题发布，<strong>条目名称以商店页面顶部显示为准</strong>，本政策不抄写它。本扩展的设计原则只有一条：<strong>所有处理都在你的浏览器本地完成，我们接触不到你的任何数据。</strong></p>
+
+<h2>1. 我们不收集、也不上传任何数据</h2>
+<ul>
+  <li>本扩展<strong>没有任何服务器</strong>：不存在数据可以发往的地方。全项目没有任何远程接口地址。</li>
+  <li>本扩展<strong>没有</strong>广告、统计分析（Analytics）、埋点、崩溃上报或第三方脚本。</li>
+  <li>本扩展<strong>不读取登录状态</strong>：没有 <code>cookies</code> 权限，不调用 ChatGPT 的任何后台接口，不取 token、不取账户信息。</li>
+  <li>本扩展<strong>不跨对话抓取</strong>：它只处理你当前正打开、已经显示在屏幕上的那一条对话。</li>
+  <li>按 Google 用户数据政策的定义，网页内容本身也算用户数据。本扩展在你打开一条 ChatGPT 对话时，会在<strong>浏览器内存中</strong>读取该页面<strong>已经渲染出来</strong>的内容（消息文本、代码块、表格、图片、链接、公式、写作区块），仅用于生成你点击后保存到本机的文件，以及把「页面有几个 / 文件有几个」的对账结果显示给你。这些数据<strong>只留在你的设备上</strong>：不上传、不写入任何日志、关闭该页面后即失效。</li>
+  <li>唯一的取字节动作：当你下载的对话里有图片时，本扩展从<strong>页面自己已经生成好的内存对象地址</strong>（<code>blob:</code>）读取这张图的字节，用来把它一起打包进 .zip。<code>blob:</code> 是浏览器内存里的地址，不会向任何服务器发出请求。</li>
+</ul>
+
+<h2>2. 保存在你浏览器本地的信息</h2>
+<p>本扩展只写<strong>两个键</strong>，都存在 <code>chrome.storage.local</code>（只在本机，<strong>不使用 <code>chrome.storage.sync</code>，所以不进你的 Google 账户、不在设备间同步、不上传</strong>）。</p>
+<p><strong>键一 <code>cvIndex</code></strong> 是「备份记录清单」，用途是让你能在备份库里看到「这条对话备份过几版、这一版比上一版少了几条」。每条记录包含：</p>
+<ul>
+  <li><strong>对话级</strong>：对话 ID（来自页面地址栏里的那段编号）、对话标题、页面地址、最近一次备份时间。</li>
+  <li><strong>每次备份级</strong>：备份时间、消息条数（总数 / 你的 / ChatGPT 的）、对账是否通过、长对话扫描是否收敛、扫描轮数、最多 5 条缺口说明（每条 ≤200 字符）、下载的文件名。</li>
+  <li><strong>消息编号</strong>：最近一次备份里每条消息在页面上自带的编号（最多 400 个），只用来算出「这一版比上一版少了哪几条」。它是页面给消息的编号，不含消息正文。</li>
+  <li><strong>容量</strong>：不设条数上限。记录只有元数据：每版约 0.3 KB，外加每条对话一份消息编号清单（最多 400 个编号，约 15 KB）。<code>chrome.storage.local</code> 的配额（Chrome 114 及以上为 10 MB）大约够几百条长对话或几千条短对话。本扩展<strong>从不自动删除</strong>任何记录；只在用到配额的 85% 时提示你自己删——备份库顶部一条，点备份那一刻面板里也会先说一句。</li>
+</ul>
+<p><strong>你的对话正文不在这份记录里。</strong> 正文只存在于你主动下载的那个 .md / .zip 文件中，那个文件在你自己的下载目录里，本扩展保存后不再持有副本。</p>
+<p><strong>键二 <code>cvPanelPos</code></strong> 只有两个数字：你把本扩展自己的面板拖到了屏幕的哪个位置（横向像素、纵向像素），用途是下次打开还停在那个位置。它不含任何对话内容，也不含任何关于你浏览行为的信息；双击面板标题栏归位时这个键会被删掉。</p>
+<p>这些数据完全归属你本人。你随时可以在备份库每张卡片上点「删除记录」删掉某条历史——删的只是这条记录本身，你已下载的 .md / .zip 文件不受影响。本扩展<strong>不会</strong>自动删除任何记录。卸载扩展会把两个键一起删掉（<code>chrome.storage.local</code> 随扩展卸载清除）。</p>
+
+<h2>3. 权限用途说明</h2>
+<table>
+  <tr><th>权限</th><th>用途</th></tr>
+  <tr><td><code>storage</code></td><td>读写上面第 2 节那两个键（备份记录清单 + 面板位置）。全部是本机读写，没有网络参与</td></tr>
+  <tr><td>站点访问（仅 <code>chatgpt.com</code> 与 <code>chat.openai.com</code>）</td><td>在你打开 ChatGPT 对话时注入界面按钮，并读取<strong>页面自身已经渲染出来</strong>的对话内容，用于生成本地备份文件与对账读数。注入范围只有这两个域名，不包含任何其他网站</td></tr>
+</table>
+<p>本扩展<strong>没有申请</strong>的权限（写在这里是为了可核对）：<code>downloads</code>、<code>tabs</code>、<code>scripting</code>、<code>webRequest</code>、<code>cookies</code>、<code>host_permissions</code>、<code>&lt;all_urls&gt;</code>。文件保存用的是浏览器普通的「下载链接」行为，因此不需要 <code>downloads</code> 权限。</p>
+
+<h2>4. 第三方网站</h2>
+<p>本扩展在 ChatGPT 网页版上运行，与 OpenAI 无任何隶属、授权或合作关系。你在 chatgpt.com 上的活动受 OpenAI 自己的服务条款与隐私政策约束。本扩展不向 OpenAI、也不向任何第三方发送请求：它只读你浏览器里已经加载好的那一份页面。</p>
+
+<h2>5. 未成年人</h2>
+<p>本扩展不面向 13 岁以下儿童，也不收集任何能识别用户身份的数据。</p>
+
+<h2>6. 政策变更</h2>
+<p>如本政策发生变化（例如新增任何对外请求或新增存储项），我们会更新本页面、修改生效日期，并随对应的扩展版本更新说明一并公布。</p>
+
+<h2>7. 联系我们</h2>
+<p><a href="mailto:socialgrabber.app@gmail.com">socialgrabber.app@gmail.com</a></p>
+
+<div class="divider"></div>
+<div class="lang-switch" id="en"><a href="#top">回到顶部 / Back to top</a></div>
+<h1>ChatVault Privacy Policy</h1>
+<p class="meta">Effective Date: 2026-10-29</p>
+
+<p>This policy applies to a browser extension ("the extension") developed by <strong>Wade</strong> ("we") and published in the Chrome Web Store under a developer account — the "Offered by" line at the bottom of the listing shows that developer name. It is published under titles that differ by language; <strong>use the title shown at the top of the store page as authoritative</strong>, and this policy deliberately does not copy it. The extension is built on one principle: <strong>everything happens locally in your browser — we have no access to any of your data.</strong></p>
+
+<h2>1. We do not collect or transmit any data</h2>
+<ul>
+  <li>The extension has <strong>no server</strong>: there is nowhere for data to go. The project contains no remote endpoint of any kind.</li>
+  <li>The extension contains <strong>no</strong> ads, analytics, tracking, crash reporting or third-party scripts.</li>
+  <li>The extension <strong>does not read your login state</strong>: no <code>cookies</code> permission, no call to any ChatGPT backend API, no token, no account information.</li>
+  <li>The extension <strong>does not crawl across conversations</strong>: it only handles the single conversation you currently have open and can already see on screen.</li>
+  <li>Under Google's user-data definition, website content itself counts as user data. When you open a ChatGPT conversation, the extension reads, <strong>in your browser's memory</strong>, the content <strong>that page has already rendered</strong> (message text, code blocks, tables, images, links, formulas, writing blocks) solely to produce the file you choose to save locally, and to show you a side-by-side check of "what was on the page / what is in the file". This data <strong>stays on your device</strong>: it is never uploaded, never written to a log, and is discarded when you close the page.</li>
+  <li>The one byte-fetching action: when the conversation you download contains images, the extension reads each image's bytes from the <strong>in-memory object URL the page itself already created</strong> (<code>blob:</code>) so the images can be packed into the .zip. A <code>blob:</code> URL points at your own browser's memory; it issues no request to any server.</li>
+</ul>
+
+<h2>2. Information stored locally in your browser</h2>
+<p>The extension writes <strong>two keys only</strong>, both in <code>chrome.storage.local</code> (on this device — <strong>it does not use <code>chrome.storage.sync</code>, so nothing goes into your Google account, nothing syncs between devices, nothing is uploaded</strong>).</p>
+<p><strong>Key one, <code>cvIndex</code></strong>, is a backup ledger, whose purpose is to let you see in the Backup Library "how many versions this conversation has, and whether this one has fewer messages than the last". Each record contains:</p>
+<ul>
+  <li><strong>Per conversation:</strong> the conversation ID (the identifier in the page's address bar), the conversation title, the page URL, and the time of the latest backup.</li>
+  <li><strong>Per backup:</strong> time; message counts (total / yours / ChatGPT's); whether the integrity check passed; whether a long-chat scan converged; the number of scan passes; up to 5 gap notes (each ≤200 characters); and the downloaded file name.</li>
+  <li><strong>Message IDs:</strong> the page's own identifier for each message in the newest backup (up to 400), used only to work out which messages the previous version had and this one does not. They are the page's IDs, not message text.</li>
+  <li><strong>Capacity:</strong> there is no count cap. Records are metadata only: about 0.3 KB per version, plus one message-ID list per conversation (up to 400 IDs, about 15 KB). The <code>chrome.storage.local</code> quota (10 MB on Chrome 114 and later) holds roughly a few hundred long conversations or a few thousand short ones. The extension <strong>never deletes a record automatically</strong>; only when 85% of the quota is used does it ask you to remove some — a notice at the top of the library, and one more line in the panel the moment you start a backup.</li>
+</ul>
+<p><strong>Your conversation text is not in this ledger.</strong> The text exists only inside the .md / .zip file you deliberately downloaded, which sits in your own downloads folder; the extension keeps no copy of it after saving.</p>
+<p><strong>Key two, <code>cvPanelPos</code></strong>, holds two numbers only: where you dragged the extension's own panel on screen (a horizontal pixel value and a vertical one), so that it reopens in that spot. It contains no conversation content and nothing about your browsing; double-clicking the panel's header docks it back and deletes this key.</p>
+<p>All of this belongs to you. Each card in the Backup Library has a Delete record button: it removes that one record and nothing else — the .md / .zip files you already downloaded are untouched. The extension does <strong>not</strong> delete records on its own. Uninstalling the extension deletes both keys (<code>chrome.storage.local</code> is cleared on uninstall).</p>
+
+<h2>3. Permissions</h2>
+<table>
+  <tr><th>Permission</th><th>Purpose</th></tr>
+  <tr><td><code>storage</code></td><td>Read and write the two keys described in Section 2 (the backup ledger and the panel position). Local read/write only, with no network involvement</td></tr>
+  <tr><td>Site access (<code>chatgpt.com</code> and <code>chat.openai.com</code> only)</td><td>Add its own buttons to the page and read the conversation content <strong>the page itself has already rendered</strong>, to build the local backup file and the integrity readouts. This injection is limited to these two domains and covers no other website</td></tr>
+</table>
+<p>Permissions this extension <strong>did not request</strong> (listed so it can be checked): <code>downloads</code>, <code>tabs</code>, <code>scripting</code>, <code>webRequest</code>, <code>cookies</code>, <code>host_permissions</code>, <code>&lt;all_urls&gt;</code>. Saving a file uses an ordinary browser download link, so no <code>downloads</code> permission is needed.</p>
+
+<h2>4. Third-party websites</h2>
+<p>The extension runs on the ChatGPT website and is not affiliated with, endorsed by, or connected to OpenAI in any way. Your activity on chatgpt.com is governed by OpenAI's own terms and privacy policy. The extension sends no request to OpenAI or to any third party: it only reads the page already loaded in your own browser.</p>
+
+<h2>5. Children</h2>
+<p>The extension is not directed at children under 13 and collects no data that could identify any user.</p>
+
+<h2>6. Changes</h2>
+<p>If this policy changes (for example, any outbound request or any new stored item is added), we will update this page, change the effective date, and describe the change in that extension version's release notes.</p>
+
+<h2>7. Contact</h2>
+<p><a href="mailto:socialgrabber.app@gmail.com">socialgrabber.app@gmail.com</a></p>
+
+</main>
+</body>
+</html>
